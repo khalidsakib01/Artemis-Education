@@ -1,41 +1,39 @@
 import { Link, useLocation } from "wouter";
 import { Home, BookOpen, Video, User, LayoutDashboard, Trophy, LogOut, Languages } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useClerk, useUser } from "@clerk/react";
 import { useLang } from "@/contexts/LanguageContext";
+import { useAppAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 
 export function Sidebar() {
   const [location] = useLocation();
-  const { signOut } = useClerk();
-  const { user, isSignedIn } = useUser();
+  const { signOut, user, isSignedIn, isAuthEnabled } = useAppAuth();
   const { lang, toggleLang, t } = useLang();
 
   const navItems = [
-    { href: "/home", label: t("হোম", "Home"), icon: Home },
-    { href: "/dashboard", label: t("আমার ড্যাশবোর্ড", "Dashboard"), icon: LayoutDashboard },
-    { href: "/courses", label: t("কোর্সসমূহ", "Courses"), icon: BookOpen },
-    { href: "/live", label: t("লাইভ ক্লাস", "Live Classes"), icon: Video },
-    { href: "/leaderboard", label: t("লিডারবোর্ড", "Leaderboard"), icon: Trophy },
-    { href: "/profile", label: t("প্রোফাইল", "Profile"), icon: User },
+    { href: "/home", label: t("\u09b9\u09cb\u09ae", "Home"), icon: Home },
+    { href: "/dashboard", label: t("\u09a1\u09cd\u09af\u09be\u09b6\u09ac\u09cb\u09b0\u09cd\u09a1", "Dashboard"), icon: LayoutDashboard },
+    { href: "/courses", label: t("\u0995\u09cb\u09b0\u09cd\u09b8", "Courses"), icon: BookOpen },
+    { href: "/live", label: t("\u09b2\u09be\u0987\u09ad \u0995\u09cd\u09b2\u09be\u09b8", "Live Classes"), icon: Video },
+    { href: "/leaderboard", label: t("\u09b2\u09bf\u09a1\u09be\u09b0\u09ac\u09cb\u09b0\u09cd\u09a1", "Leaderboard"), icon: Trophy },
+    { href: "/profile", label: t("\u09aa\u09cd\u09b0\u09cb\u09ab\u09be\u0987\u09b2", "Profile"), icon: User },
   ];
 
   return (
-    <aside className="hidden md:flex flex-col w-64 h-screen fixed top-0 left-0 bg-card border-r border-border">
+    <aside className="fixed left-0 top-0 hidden h-screen w-64 flex-col border-r border-border bg-card md:flex">
       <div className="p-6">
         <Link href={isSignedIn ? "/home" : "/"} className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-indigo-600 flex items-center justify-center shadow">
-            <span className="text-white font-bold text-xl">A</span>
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-indigo-600 shadow">
+            <span className="text-xl font-bold text-white">A</span>
           </div>
           <div>
-            <h1 className="font-bold text-base leading-tight text-primary">Artemis</h1>
-            <p className="text-[10px] text-muted-foreground leading-tight" style={{fontFamily:"'Hind Siliguri', sans-serif"}}>আর্টেমিস এডুকেশন</p>
+            <h1 className="text-base font-bold leading-tight text-primary">Artemis</h1>
+            <p className="text-[10px] leading-tight text-muted-foreground">Education platform</p>
           </div>
         </Link>
       </div>
 
-      <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
+      <nav className="flex-1 space-y-1 overflow-y-auto px-4 py-4">
         {navItems.map((item) => {
           const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
           return (
@@ -43,49 +41,56 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 px-4 py-3 rounded-xl transition-all",
+                "flex items-center gap-3 rounded-xl px-4 py-3 transition-all",
                 isActive
-                  ? "bg-primary/10 text-primary font-semibold"
-                  : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                  ? "bg-primary/10 font-semibold text-primary"
+                  : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
               )}
             >
-              <item.icon className="w-5 h-5" />
+              <item.icon className="h-5 w-5" />
               <span>{item.label}</span>
             </Link>
           );
         })}
       </nav>
 
-      <div className="p-4 border-t border-border space-y-3">
-        {/* Language Toggle */}
+      <div className="space-y-3 border-t border-border p-4">
         <button
           onClick={toggleLang}
-          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-all text-sm font-medium"
+          className="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium text-muted-foreground transition-all hover:bg-accent/50 hover:text-foreground"
         >
-          <Languages className="w-4 h-4" />
-          <span>{lang === "bn" ? "Switch to English" : "বাংলায় দেখুন"}</span>
+          <Languages className="h-4 w-4" />
+          <span>{lang === "bn" ? "Switch to English" : "\u09ac\u09be\u0982\u09b2\u09be\u09af\u09bc \u09af\u09be\u09a8"}</span>
         </button>
 
-        {/* User info + sign out */}
         {isSignedIn && (
           <div className="flex items-center gap-3">
-            <Avatar className="w-8 h-8 border">
-              <AvatarImage src={user?.imageUrl} />
-              <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+            <Avatar className="h-8 w-8 border">
+              <AvatarImage src={user?.imageUrl ?? undefined} />
+              <AvatarFallback className="bg-primary text-xs text-primary-foreground">
                 {user?.firstName?.[0] ?? "U"}
               </AvatarFallback>
             </Avatar>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{user?.firstName || user?.emailAddresses?.[0]?.emailAddress?.split("@")[0]}</p>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium">{user?.firstName || user?.email || "Student"}</p>
             </div>
             <button
-              onClick={() => signOut({ redirectUrl: "/" })}
-              className="text-muted-foreground hover:text-destructive transition-colors"
-              title={t("লগআউট", "Sign out")}
+              onClick={() => void signOut()}
+              className="text-muted-foreground transition-colors hover:text-destructive"
+              title={t("\u09b8\u09be\u0987\u09a8 \u0986\u0989\u099f", "Sign out")}
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="h-4 w-4" />
             </button>
           </div>
+        )}
+
+        {!isAuthEnabled && (
+          <p className="px-4 text-xs leading-relaxed text-muted-foreground">
+            {t(
+              "\u098f\u0987 \u09ad\u09be\u09b0\u09cd\u09b8\u09a8\u09c7 \u0985\u09a5\u09c7\u09a8\u099f\u09bf\u0995\u09c7\u09b6\u09a8 \u099a\u09be\u09b2\u09c1 \u09a8\u09c7\u0987\u0964 \u09a1\u09c7\u09ae\u09cb \u0995\u09a8\u09cd\u099f\u09c7\u09a8\u09cd\u099f \u09a6\u09bf\u09af\u09bc\u09c7 \u0986\u09aa\u09a8\u09bf \u098f\u0996\u09a8\u0993 \u09aa\u09c7\u099c\u0997\u09c1\u09b2\u09cb \u09a6\u09c7\u0996\u09a4\u09c7 \u09aa\u09be\u09b0\u09ac\u09c7\u09a8\u0964",
+              "Authentication is not configured in this environment. Demo content is available so you can still browse the app.",
+            )}
+          </p>
         )}
       </div>
     </aside>

@@ -47,3 +47,9 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# Local runtime artifacts
+logs/
+preview
+_tmp_*
+artifacts/*.png

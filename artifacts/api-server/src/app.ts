@@ -3,9 +3,15 @@ import cors from "cors";
 import pinoHttp from "pino-http";
 import { clerkMiddleware } from "@clerk/express";
 import { CLERK_PROXY_PATH, clerkProxyMiddleware } from "./middlewares/clerkProxyMiddleware";
-import router from "./routes";
 import { logger } from "./lib/logger";
-import { seedDatabase } from "./routes/seed";
+
+const hasDatabase = Boolean(process.env.DATABASE_URL);
+const { default: router } = hasDatabase
+  ? await import("./routes")
+  : await import("./mock/router");
+const seedDatabase = hasDatabase
+  ? (await import("./routes/seed")).seedDatabase
+  : null;
 
 const app: Express = express();
 
@@ -23,18 +29,24 @@ app.use(
   }),
 );
 
-app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
+if (hasDatabase) {
+  app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
+}
 
 app.use(cors({ credentials: true, origin: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use(clerkMiddleware());
+if (hasDatabase) {
+  app.use(clerkMiddleware());
+}
 
 app.use("/api", router);
 
-seedDatabase().catch((err) => {
-  logger.error({ err }, "Failed to seed database");
-});
+if (seedDatabase) {
+  seedDatabase().catch((err) => {
+    logger.error({ err }, "Failed to seed database");
+  });
+}
 
 export default app;

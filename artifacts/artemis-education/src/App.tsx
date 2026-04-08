@@ -1,21 +1,21 @@
-import { useEffect, useRef } from "react";
-import { Switch, Route, Router as WouterRouter, useLocation, Redirect } from "wouter";
-import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
-import { ClerkProvider, Show, useClerk } from "@clerk/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type { ComponentType } from "react";
+import { setBaseUrl } from "@workspace/api-client-react";
+import { Redirect, Route, Router as WouterRouter, Switch, useLocation } from "wouter";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AppAuthProvider, useAppAuth } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
-
-import NotFound from "@/pages/not-found";
-import Home from "@/pages/home";
-import Courses from "@/pages/courses";
 import CourseDetail from "@/pages/course-detail";
+import Courses from "@/pages/courses";
+import Dashboard from "@/pages/dashboard";
+import Home from "@/pages/home";
+import Leaderboard from "@/pages/leaderboard";
 import LessonPlayer from "@/pages/lesson-player";
 import LiveClasses from "@/pages/live-classes";
-import Dashboard from "@/pages/dashboard";
-import Profile from "@/pages/profile";
-import Leaderboard from "@/pages/leaderboard";
+import NotFound from "@/pages/not-found";
 import Payment from "@/pages/payment";
+import Profile from "@/pages/profile";
 import QuizPlayer from "@/pages/quiz-player";
 import QuizResults from "@/pages/quiz-results";
 import SignInPage from "@/pages/sign-in";
@@ -24,7 +24,18 @@ import SignUpPage from "@/pages/sign-up";
 const queryClient = new QueryClient();
 const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 const clerkProxyUrl = import.meta.env.VITE_CLERK_PROXY_URL;
+const runtimeApiBaseUrl =
+  typeof window !== "undefined" &&
+  (window.location.hostname === "127.0.0.1" ||
+    window.location.hostname === "localhost")
+    ? `${window.location.protocol}//${window.location.hostname}:8080`
+    : null;
+const apiBaseUrl =
+  import.meta.env.VITE_API_BASE_URL ??
+  (import.meta.env.DEV ? "http://localhost:8080" : runtimeApiBaseUrl);
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+setBaseUrl(apiBaseUrl || null);
 
 function stripBase(path: string): string {
   return basePath && path.startsWith(basePath)
@@ -32,56 +43,27 @@ function stripBase(path: string): string {
     : path;
 }
 
-if (!clerkPubKey) {
-  throw new Error("Missing VITE_CLERK_PUBLISHABLE_KEY");
-}
+function ProtectedRoute({ component: Component }: { component: ComponentType }) {
+  const { isSignedIn } = useAppAuth();
 
-function ClerkQueryClientCacheInvalidator() {
-  const { addListener } = useClerk();
-  const qc = useQueryClient();
-  const prevUserIdRef = useRef<string | null | undefined>(undefined);
+  if (!isSignedIn) {
+    return <Redirect to="/sign-in" />;
+  }
 
-  useEffect(() => {
-    const unsubscribe = addListener(({ user }) => {
-      const userId = user?.id ?? null;
-      if (prevUserIdRef.current !== undefined && prevUserIdRef.current !== userId) {
-        qc.clear();
-      }
-      prevUserIdRef.current = userId;
-    });
-    return unsubscribe;
-  }, [addListener, qc]);
-
-  return null;
-}
-
-function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
-  return (
-    <>
-      <Show when="signed-in">
-        <Component />
-      </Show>
-      <Show when="signed-out">
-        <Redirect to="/sign-in" />
-      </Show>
-    </>
-  );
+  return <Component />;
 }
 
 function HomeRoute() {
-  return (
-    <>
-      <Show when="signed-in">
-        <Redirect to="/home" />
-      </Show>
-      <Show when="signed-out">
-        <LandingPage />
-      </Show>
-    </>
-  );
+  const { isSignedIn } = useAppAuth();
+
+  if (isSignedIn) {
+    return <Redirect to="/home" />;
+  }
+
+  return <LandingPage />;
 }
 
-function Router() {
+function AppRoutes() {
   return (
     <Switch>
       <Route path="/" component={HomeRoute} />
@@ -103,127 +85,145 @@ function Router() {
   );
 }
 
-function ClerkProviderWithRoutes() {
+function AppProviders() {
   const [, setLocation] = useLocation();
 
   return (
-    <ClerkProvider
-      publishableKey={clerkPubKey}
-      proxyUrl={clerkProxyUrl}
-      routerPush={(to) => setLocation(stripBase(to))}
-      routerReplace={(to) => setLocation(stripBase(to), { replace: true })}
-    >
-      <QueryClientProvider client={queryClient}>
-        <ClerkQueryClientCacheInvalidator />
-        <LanguageProvider>
-          <TooltipProvider>
-            <Router />
+    <QueryClientProvider client={queryClient}>
+      <LanguageProvider>
+        <TooltipProvider>
+          <AppAuthProvider
+            publishableKey={clerkPubKey}
+            proxyUrl={clerkProxyUrl}
+            routerPush={(to) => setLocation(stripBase(to))}
+            routerReplace={(to) => setLocation(stripBase(to), { replace: true })}
+          >
+            <AppRoutes />
             <Toaster />
-          </TooltipProvider>
-        </LanguageProvider>
-      </QueryClientProvider>
-    </ClerkProvider>
+          </AppAuthProvider>
+        </TooltipProvider>
+      </LanguageProvider>
+    </QueryClientProvider>
   );
 }
 
-function App() {
+export default function App() {
   return (
     <WouterRouter base={basePath}>
-      <ClerkProviderWithRoutes />
+      <AppProviders />
     </WouterRouter>
   );
 }
 
-export default App;
-
-// Landing page for unauthenticated users
 function LandingPage() {
   const [, setLocation] = useLocation();
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white">
-      {/* Nav */}
-      <nav className="flex items-center justify-between p-4 md:px-12 md:py-6 border-b border-white/10">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(245,158,11,0.18),_transparent_28%),linear-gradient(135deg,#020617_0%,#172554_48%,#0f172a_100%)] text-white">
+      <nav className="flex items-center justify-between border-b border-white/10 p-4 md:px-12 md:py-6">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center font-bold text-slate-900 text-lg shadow">A</div>
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-lg font-bold text-slate-950 shadow-lg">
+            A
+          </div>
           <div>
-            <div className="font-bold text-lg leading-tight">Artemis Education</div>
-            <div className="text-xs text-indigo-300 leading-tight font-medium" style={{fontFamily:"'Hind Siliguri', sans-serif"}}>আর্টেমিস এডুকেশন</div>
+            <div className="text-lg font-bold leading-tight">Artemis Education</div>
+            <div className="text-xs font-medium leading-tight text-indigo-200">
+              Smart learning for ambitious students
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={() => setLocation("/sign-in")}
-            className="px-4 py-2 text-sm font-medium text-white/80 hover:text-white transition-colors"
+            className="px-4 py-2 text-sm font-medium text-white/80 transition-colors hover:text-white"
           >
-            লগইন
+            Sign in
           </button>
           <button
             onClick={() => setLocation("/sign-up")}
-            className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold rounded-xl text-sm transition-colors shadow-lg"
+            className="rounded-xl bg-amber-500 px-5 py-2 text-sm font-bold text-slate-950 shadow-lg transition-colors hover:bg-amber-400"
           >
-            শুরু করুন
+            Get started
           </button>
         </div>
       </nav>
 
-      {/* Hero */}
-      <div className="max-w-5xl mx-auto px-4 md:px-12 py-16 md:py-24 text-center space-y-8">
-        <div className="inline-flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 text-amber-400 px-4 py-1.5 rounded-full text-sm font-medium">
-          <span className="w-2 h-2 bg-amber-400 rounded-full animate-pulse inline-block"></span>
-          HSC 2026 ব্যাচ চলছে
+      <div className="mx-auto max-w-5xl space-y-8 px-4 py-16 text-center md:px-12 md:py-24">
+        <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/20 bg-amber-400/10 px-4 py-1.5 text-sm font-medium text-amber-300">
+          <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-amber-400"></span>
+          HSC 2026 preparation, live classes, and practice tests
         </div>
 
-        <h1 className="text-4xl md:text-6xl font-extrabold leading-tight" style={{fontFamily:"'Hind Siliguri', sans-serif"}}>
-          স্মার্টভাবে শিখুন,{" "}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-400">সফলতা অর্জন করুন</span>
+        <h1 className="text-4xl font-extrabold leading-tight md:text-6xl">
+          Learn with structure,
+          <span className="bg-gradient-to-r from-amber-300 to-orange-400 bg-clip-text text-transparent">
+            {" "}study with confidence
+          </span>
         </h1>
 
-        <p className="text-lg md:text-xl text-indigo-200 max-w-2xl mx-auto leading-relaxed" style={{fontFamily:"'Hind Siliguri', sans-serif"}}>
-          বাংলাদেশের সেরা শিক্ষকদের সাথে HSC, SSC ও বিশ্ববিদ্যালয় ভর্তি পরীক্ষার প্রস্তুতি নিন।
-          ভিডিও ক্লাস, লাইভ ক্লাস, কুইজ ও সার্টিফিকেট — সবকিছু এক জায়গায়।
+        <p className="mx-auto max-w-2xl text-lg leading-relaxed text-indigo-100 md:text-xl">
+          Explore courses, watch upcoming live sessions, and practice with a
+          focused learning experience built for students who want momentum.
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        <div className="flex flex-col justify-center gap-4 sm:flex-row">
           <button
             onClick={() => setLocation("/sign-up")}
-            className="px-8 py-4 bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold rounded-2xl text-lg transition-all shadow-xl hover:shadow-amber-500/30 hover:-translate-y-0.5"
+            className="rounded-2xl bg-amber-500 px-8 py-4 text-lg font-bold text-slate-950 shadow-xl transition-all hover:-translate-y-0.5 hover:bg-amber-400 hover:shadow-amber-500/30"
           >
-            বিনামূল্যে শুরু করুন
+            Create your account
           </button>
           <button
             onClick={() => setLocation("/courses")}
-            className="px-8 py-4 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold rounded-2xl text-lg transition-all"
+            className="rounded-2xl border border-white/20 bg-white/10 px-8 py-4 text-lg font-semibold text-white transition-all hover:bg-white/20"
           >
-            কোর্সসমূহ দেখুন
+            Browse courses
           </button>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-6 max-w-lg mx-auto pt-8">
+        <div className="mx-auto grid max-w-lg grid-cols-3 gap-6 pt-8">
           {[
-            { value: "৫০,০০০+", label: "শিক্ষার্থী" },
-            { value: "১৫০+", label: "কোর্স" },
-            { value: "৯৮%", label: "সাফল্যের হার" },
-          ].map((s) => (
-            <div key={s.label} className="text-center">
-              <div className="text-2xl md:text-3xl font-extrabold text-amber-400" style={{fontFamily:"'Hind Siliguri', sans-serif"}}>{s.value}</div>
-              <div className="text-sm text-indigo-300 mt-1" style={{fontFamily:"'Hind Siliguri', sans-serif"}}>{s.label}</div>
+            { value: "12k+", label: "Active learners" },
+            { value: "240+", label: "Lessons" },
+            { value: "92%", label: "Completion focus" },
+          ].map((item) => (
+            <div key={item.label} className="text-center">
+              <div className="text-2xl font-extrabold text-amber-300 md:text-3xl">
+                {item.value}
+              </div>
+              <div className="mt-1 text-sm text-indigo-200">{item.label}</div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Features */}
-      <div className="max-w-5xl mx-auto px-4 md:px-12 pb-20 grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 px-4 pb-20 sm:grid-cols-3 md:px-12">
         {[
-          { icon: "📹", title: "রেকর্ডেড ক্লাস", desc: "যেকোনো সময়, যেকোনো জায়গায় শিখুন" },
-          { icon: "🔴", title: "লাইভ ক্লাস", desc: "সরাসরি শিক্ষকের সাথে প্রশ্ন করুন" },
-          { icon: "🏆", title: "সার্টিফিকেট", desc: "কোর্স সম্পন্ন করে সার্টিফিকেট পান" },
-        ].map((f) => (
-          <div key={f.title} className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-3 hover:bg-white/10 transition-colors">
-            <div className="text-3xl">{f.icon}</div>
-            <div className="font-bold text-lg" style={{fontFamily:"'Hind Siliguri', sans-serif"}}>{f.title}</div>
-            <div className="text-indigo-300 text-sm" style={{fontFamily:"'Hind Siliguri', sans-serif"}}>{f.desc}</div>
+          {
+            icon: "AI",
+            title: "Organized paths",
+            desc: "Move from discovery to exam prep with one clear learning flow.",
+          },
+          {
+            icon: "QS",
+            title: "Quick study",
+            desc: "Find lessons and courses fast without fighting the interface.",
+          },
+          {
+            icon: "LC",
+            title: "Live support",
+            desc: "Keep track of upcoming classes and stay close to teachers.",
+          },
+        ].map((feature) => (
+          <div
+            key={feature.title}
+            className="space-y-3 rounded-2xl border border-white/10 bg-white/5 p-6 transition-colors hover:bg-white/10"
+          >
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-sm font-semibold text-amber-300">
+              {feature.icon}
+            </div>
+            <div className="text-lg font-bold">{feature.title}</div>
+            <div className="text-sm text-indigo-100">{feature.desc}</div>
           </div>
         ))}
       </div>

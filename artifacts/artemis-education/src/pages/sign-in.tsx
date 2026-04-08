@@ -1,30 +1,59 @@
-import { SignIn } from "@clerk/react";
+import { useAppAuth } from "@/contexts/AuthContext";
+import { lazy, Suspense } from "react";
+import { Link } from "wouter";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+const ClerkSignIn = lazy(() => import("@clerk/react").then((module) => ({ default: module.SignIn })));
 
 export default function SignInPage() {
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-indigo-50 dark:to-indigo-950/20 flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6">
-        <div className="text-center space-y-2">
-          <div className="w-14 h-14 bg-gradient-to-br from-primary to-indigo-600 rounded-2xl mx-auto flex items-center justify-center shadow-lg">
-            <span className="text-white text-2xl font-bold">A</span>
+  const { isAuthEnabled } = useAppAuth();
+
+  if (!isAuthEnabled) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-100 via-white to-amber-50 p-4">
+        <div className="w-full max-w-md rounded-3xl border bg-card p-8 shadow-xl">
+          <h1 className="text-2xl font-bold text-foreground">Sign in is unavailable</h1>
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+            Clerk is not configured in this environment yet, so protected pages are disabled.
+            You can still browse the public parts of the website.
+          </p>
+          <div className="mt-6 flex gap-3">
+            <Link href="/" className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">
+              Go home
+            </Link>
+            <Link href="/courses" className="rounded-xl border px-4 py-2 text-sm font-medium text-foreground">
+              View courses
+            </Link>
           </div>
-          <h1 className="text-2xl font-bold text-foreground">আর্টেমিস এডুকেশন</h1>
-          <p className="text-muted-foreground text-sm">স্মার্টভাবে শিখুন, সফলতা অর্জন করুন</p>
         </div>
-        <SignIn
-          routing="path"
-          path={`${basePath}/sign-in`}
-          signUpUrl={`${basePath}/sign-up`}
-          appearance={{
-            elements: {
-              card: "shadow-xl border border-border rounded-2xl",
-              headerTitle: "hidden",
-              headerSubtitle: "hidden",
-            }
-          }}
-        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/5 via-background to-indigo-50 p-4 dark:to-indigo-950/20">
+      <div className="w-full max-w-md space-y-6">
+        <div className="space-y-2 text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-indigo-600 shadow-lg">
+            <span className="text-2xl font-bold text-white">A</span>
+          </div>
+          <h1 className="text-2xl font-bold text-foreground">Welcome back</h1>
+          <p className="text-sm text-muted-foreground">Sign in to continue learning with Artemis Education.</p>
+        </div>
+        <Suspense fallback={<div className="rounded-2xl border border-border bg-card p-8 text-sm text-muted-foreground shadow-xl">Loading sign in...</div>}>
+          <ClerkSignIn
+            routing="path"
+            path={`${basePath}/sign-in`}
+            signUpUrl={`${basePath}/sign-up`}
+            appearance={{
+              elements: {
+                card: "rounded-2xl border border-border shadow-xl",
+                headerTitle: "hidden",
+                headerSubtitle: "hidden",
+              },
+            }}
+          />
+        </Suspense>
       </div>
     </div>
   );
