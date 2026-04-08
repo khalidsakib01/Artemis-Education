@@ -1,15 +1,13 @@
 {
   "version": 2,
+  "framework": "vite",
   "installCommand": "pnpm install --frozen-lockfile",
   "buildCommand": "pnpm --filter @workspace/artemis-education build",
   "outputDirectory": "artifacts/artemis-education/dist/public",
-  "routes": [
+  "rewrites": [
     {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/.*",
-      "dest": "/index.html"
+      "source": "^/(?!api(?:/|$))(.*)$",
+      "destination": "/index.html"
     }
   ]
 }
