@@ -3,7 +3,7 @@
   "framework": null,
   "installCommand": "pnpm install --frozen-lockfile",
   "buildCommand": "pnpm --filter @workspace/artemis-education build",
-  "outputDirectory": "artifacts/artemis-education/dist/public",
+  "outputDirectory": "artifacts/artemis-education/public",
   "rewrites": [
     {
       "source": "/((?!api(?:/|$)).*)",
