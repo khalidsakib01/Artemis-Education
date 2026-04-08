@@ -1,0 +1,236 @@
+Build a complete, production-ready, mobile-first EdTech platform for Bangladesh named “Artemis Education”, similar to 10 Minute School and Shikho, with full integration of recorded classes, live classes, quizzes, payments, and Bangla-first user experience.
+
+🎯 BRAND IDENTITY:
+- Name: Artemis Education
+- Tagline: “Learn Smart, Achieve More” (English)
+- Bangla tagline: “স্মার্টভাবে শিখুন, সফলতা অর্জন করুন”
+- Style: Premium, modern, trustworthy
+- Logo style: Minimal, tech + education inspired
+
+--------------------------------------------------
+
+🌐 LANGUAGE & LOCALIZATION (CRITICAL):
+- Primary language: Bangla (বাংলা)
+- Secondary: English toggle
+- Unicode Bangla support
+- Fonts: Noto Sans Bengali / Hind Siliguri
+- Example UI:
+  - “Artemis Education-এ স্বাগতম”
+  - “কোর্সসমূহ”
+  - “লাইভ ক্লাস”
+  - “এনরোল করুন”
+  - “আমার ড্যাশবোর্ড”
+
+--------------------------------------------------
+
+📱 MOBILE-FIRST DESIGN:
+- Fully responsive (focus on Android users)
+- Progressive Web App (PWA)
+- Bottom navigation:
+  - Home (হোম)
+  - Courses (কোর্স)
+  - Live (লাইভ)
+  - Profile (প্রোফাইল)
+- Fast loading for slow internet
+
+--------------------------------------------------
+
+🎨 UI DESIGN:
+- Clean, premium (Apple + Duolingo inspired)
+- Accent color: Deep blue/purple gradient
+- Card-based layout
+- Soft shadows, rounded corners (2xl)
+- Smooth animations (Framer Motion)
+
+--------------------------------------------------
+
+🧩 CORE FEATURES
+
+1. HOME PAGE
+- Hero banner: “HSC 2026 Crash Course”
+- Featured courses
+- Categories:
+  - SSC
+  - HSC
+  - Admission
+  - Skills
+- Continue Learning
+- Daily streak
+
+2. AUTH SYSTEM
+- Mobile OTP login (Firebase)
+- Google login
+- Profile setup (Name, Class, Goal)
+
+3. COURSE SYSTEM
+- Structure: Course → Module → Lesson
+- Lesson types:
+  - Video
+  - PDF
+  - Quiz
+- Progress tracking
+- Mark complete
+- Download resources
+
+4. VIDEO SYSTEM (RECORDED CLASSES)
+- YouTube (unlisted) / Vimeo / Mux
+- Features:
+  - Resume playback
+  - Speed control
+  - Quality selection
+  - Notes inside video
+
+5. LIVE CLASS SYSTEM
+- Zoom API / Google Meet integration
+- Schedule system
+- “Join Live Class” button
+- Auto-record classes
+- Save recordings as lessons
+
+6. QUIZ & EXAM SYSTEM
+- MCQ quizzes
+- Timed exams
+- Leaderboard
+- Instant results
+- Answer explanations
+
+7. STUDENT DASHBOARD
+- Enrolled courses
+- Progress %
+- Upcoming live classes
+- Certificates
+- Study streak
+
+8. PAYMENT SYSTEM (BANGLADESH)
+- bKash integration
+- Nagad integration
+- Manual payment (screenshot upload)
+- Coupon system
+- Unlock course after payment
+
+9. ADMIN PANEL
+- Manage users
+- Manage courses
+- Upload content
+- Analytics dashboard
+
+10. INSTRUCTOR PANEL
+- Upload courses
+- Manage lessons
+- Track student performance
+
+11. NOTIFICATIONS
+- Push notifications (Firebase)
+- SMS alerts
+- Example:
+  - “আজ রাত ৮টায় Artemis Education-এ লাইভ ক্লাস”
+
+12. SEARCH & FILTER
+- Search courses
+- Filter by class, subject, price
+
+13. GAMIFICATION
+- Points
+- Badges
+- Streak
+- Leaderboard
+
+14. CERTIFICATE SYSTEM
+- Auto-generate branded PDF certificate:
+  - “Artemis Education Certificate of Completion”
+
+15. OFFLINE SUPPORT
+- PWA caching
+- Download lessons
+
+--------------------------------------------------
+
+🧠 ADVANCED FEATURES
+
+- AI course recommendations
+- Personalized study plan
+- AI chatbot assistant
+- Bangla voice search
+
+--------------------------------------------------
+
+🔧 TECH STACK
+
+Frontend:
+- Next.js + Tailwind CSS + Framer Motion
+
+Backend:
+- Firebase (Auth + Firestore + Functions)
+
+Database:
+- Firestore
+
+Storage:
+- Firebase Storage / Cloudinary
+
+Video:
+- YouTube / Vimeo / Mux
+
+Live:
+- Zoom API (primary)
+
+Payments:
+- bKash + Nagad APIs
+
+Notifications:
+- Firebase Cloud Messaging + SMS API
+
+Deployment:
+- Vercel + Firebase
+
+--------------------------------------------------
+
+⚡ PERFORMANCE
+
+- Optimized for 3G networks
+- Lazy loading
+- CDN
+- Fast initial load
+
+--------------------------------------------------
+
+🔐 SECURITY
+
+- OTP authentication
+- Role-based access
+- Secure payment verification
+- Protected content
+
+--------------------------------------------------
+
+🧩 DEVELOPMENT PLAN
+
+Phase 1:
+- Auth + Course + Video
+
+Phase 2:
+- Payment + Dashboard
+
+Phase 3:
+- Live + Quiz
+
+Phase 4:
+- Admin + Optimization
+
+--------------------------------------------------
+
+💰 MONETIZATION
+
+- Course pricing: ৳299–৳1500
+- Live class bundles
+- Subscription model (future)
+
+--------------------------------------------------
+
+🎯 FINAL OUTPUT
+
+- Fully working Artemis Education platform
+- Bangla-first UI
+- Mobile-first experience
+- Integrated video + live classes + payments
+- Ready for real students in Bangladesh

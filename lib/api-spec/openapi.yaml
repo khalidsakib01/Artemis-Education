@@ -3,20 +3,34 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Artemis Education API specification
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: courses
+    description: Course management
+  - name: lessons
+    description: Lesson management
+  - name: quizzes
+    description: Quiz and exam management
+  - name: users
+    description: User profile and progress
+  - name: live
+    description: Live class management
+  - name: payments
+    description: Payment management
+  - name: dashboard
+    description: Dashboard summaries and analytics
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +38,374 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /courses:
+    get:
+      operationId: listCourses
+      tags: [courses]
+      summary: List all courses
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: featured
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: List of courses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Course"
+
+  /courses/{id}:
+    get:
+      operationId: getCourse
+      tags: [courses]
+      summary: Get course details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Course details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CourseDetail"
+
+  /courses/{id}/lessons:
+    get:
+      operationId: getCourseLessons
+      tags: [lessons]
+      summary: Get all lessons in a course
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of lessons
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Lesson"
+
+  /lessons/{id}:
+    get:
+      operationId: getLesson
+      tags: [lessons]
+      summary: Get lesson details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Lesson details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Lesson"
+
+  /quizzes:
+    get:
+      operationId: listQuizzes
+      tags: [quizzes]
+      summary: List quizzes
+      parameters:
+        - name: courseId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of quizzes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Quiz"
+
+  /quizzes/{id}:
+    get:
+      operationId: getQuiz
+      tags: [quizzes]
+      summary: Get quiz with questions
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Quiz details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizDetail"
+
+  /quizzes/{id}/submit:
+    post:
+      operationId: submitQuiz
+      tags: [quizzes]
+      summary: Submit quiz answers
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuizSubmission"
+      responses:
+        "200":
+          description: Quiz results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizResult"
+
+  /leaderboard:
+    get:
+      operationId: getLeaderboard
+      tags: [quizzes]
+      summary: Get quiz leaderboard
+      responses:
+        "200":
+          description: Leaderboard entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LeaderboardEntry"
+
+  /users/profile:
+    get:
+      operationId: getUserProfile
+      tags: [users]
+      summary: Get current user profile
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+    put:
+      operationId: updateUserProfile
+      tags: [users]
+      summary: Update user profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserProfileBody"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+
+  /users/enrollments:
+    get:
+      operationId: getUserEnrollments
+      tags: [users]
+      summary: Get user's enrolled courses
+      responses:
+        "200":
+          description: Enrolled courses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Enrollment"
+    post:
+      operationId: enrollCourse
+      tags: [users]
+      summary: Enroll in a course
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EnrollCourseBody"
+      responses:
+        "201":
+          description: Enrollment created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Enrollment"
+
+  /users/progress:
+    get:
+      operationId: getUserProgress
+      tags: [users]
+      summary: Get user learning progress
+      responses:
+        "200":
+          description: Progress data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LessonProgress"
+    post:
+      operationId: updateLessonProgress
+      tags: [users]
+      summary: Update lesson completion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProgressBody"
+      responses:
+        "200":
+          description: Progress updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LessonProgress"
+
+  /live-classes:
+    get:
+      operationId: listLiveClasses
+      tags: [live]
+      summary: List upcoming live classes
+      responses:
+        "200":
+          description: List of live classes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LiveClass"
+
+  /live-classes/{id}:
+    get:
+      operationId: getLiveClass
+      tags: [live]
+      summary: Get live class details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Live class details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LiveClass"
+
+  /payments:
+    get:
+      operationId: listPayments
+      tags: [payments]
+      summary: List user payment history
+      responses:
+        "200":
+          description: Payment history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Payment"
+    post:
+      operationId: createPayment
+      tags: [payments]
+      summary: Create a payment for a course
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePaymentBody"
+      responses:
+        "201":
+          description: Payment created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
+
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get student dashboard summary
+      responses:
+        "200":
+          description: Dashboard summary with stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /dashboard/streak:
+    get:
+      operationId: getUserStreak
+      tags: [dashboard]
+      summary: Get user study streak
+      responses:
+        "200":
+          description: Streak data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StreakData"
+
+  /categories:
+    get:
+      operationId: listCategories
+      tags: [courses]
+      summary: List course categories
+      responses:
+        "200":
+          description: Categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Category"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +416,567 @@ components:
       required:
         - status
 
+    Course:
+      type: object
+      properties:
+        id:
+          type: integer
+        titleBn:
+          type: string
+        titleEn:
+          type: string
+        descriptionBn:
+          type: string
+        descriptionEn:
+          type: string
+        category:
+          type: string
+        instructor:
+          type: string
+        thumbnailUrl:
+          type: string
+        price:
+          type: number
+        originalPrice:
+          type: number
+        totalLessons:
+          type: integer
+        totalDuration:
+          type: string
+        rating:
+          type: number
+        enrolledCount:
+          type: integer
+        isFeatured:
+          type: boolean
+        level:
+          type: string
+          enum: [beginner, intermediate, advanced]
+        tags:
+          type: array
+          items:
+            type: string
+      required:
+        - id
+        - titleBn
+        - titleEn
+        - category
+        - instructor
+        - price
+        - totalLessons
+        - rating
+        - enrolledCount
+        - isFeatured
+        - level
+
+    CourseDetail:
+      allOf:
+        - $ref: "#/components/schemas/Course"
+        - type: object
+          properties:
+            modules:
+              type: array
+              items:
+                $ref: "#/components/schemas/CourseModule"
+            syllabus:
+              type: array
+              items:
+                type: string
+            requirements:
+              type: array
+              items:
+                type: string
+
+    CourseModule:
+      type: object
+      properties:
+        id:
+          type: integer
+        titleBn:
+          type: string
+        titleEn:
+          type: string
+        order:
+          type: integer
+        lessons:
+          type: array
+          items:
+            $ref: "#/components/schemas/Lesson"
+      required:
+        - id
+        - titleBn
+        - titleEn
+        - order
+
+    Lesson:
+      type: object
+      properties:
+        id:
+          type: integer
+        courseId:
+          type: integer
+        moduleId:
+          type: integer
+        titleBn:
+          type: string
+        titleEn:
+          type: string
+        type:
+          type: string
+          enum: [video, pdf, quiz]
+        duration:
+          type: string
+        videoUrl:
+          type: string
+        pdfUrl:
+          type: string
+        order:
+          type: integer
+        isFree:
+          type: boolean
+      required:
+        - id
+        - courseId
+        - titleBn
+        - titleEn
+        - type
+        - order
+        - isFree
+
+    Quiz:
+      type: object
+      properties:
+        id:
+          type: integer
+        titleBn:
+          type: string
+        titleEn:
+          type: string
+        courseId:
+          type: integer
+        totalQuestions:
+          type: integer
+        timeLimitMinutes:
+          type: integer
+        passingScore:
+          type: integer
+      required:
+        - id
+        - titleBn
+        - titleEn
+        - totalQuestions
+        - timeLimitMinutes
+        - passingScore
+
+    QuizDetail:
+      allOf:
+        - $ref: "#/components/schemas/Quiz"
+        - type: object
+          properties:
+            questions:
+              type: array
+              items:
+                $ref: "#/components/schemas/QuizQuestion"
+
+    QuizQuestion:
+      type: object
+      properties:
+        id:
+          type: integer
+        questionBn:
+          type: string
+        questionEn:
+          type: string
+        options:
+          type: array
+          items:
+            type: string
+        explanation:
+          type: string
+      required:
+        - id
+        - questionBn
+        - options
+
+    QuizSubmission:
+      type: object
+      properties:
+        answers:
+          type: object
+          additionalProperties:
+            type: integer
+      required:
+        - answers
+
+    QuizResult:
+      type: object
+      properties:
+        score:
+          type: integer
+        totalQuestions:
+          type: integer
+        correctAnswers:
+          type: integer
+        passed:
+          type: boolean
+        timeTaken:
+          type: integer
+        answers:
+          type: array
+          items:
+            $ref: "#/components/schemas/AnswerResult"
+      required:
+        - score
+        - totalQuestions
+        - correctAnswers
+        - passed
+
+    AnswerResult:
+      type: object
+      properties:
+        questionId:
+          type: integer
+        selectedOption:
+          type: integer
+        correctOption:
+          type: integer
+        isCorrect:
+          type: boolean
+        explanation:
+          type: string
+      required:
+        - questionId
+        - correctOption
+        - isCorrect
+
+    LeaderboardEntry:
+      type: object
+      properties:
+        rank:
+          type: integer
+        userId:
+          type: integer
+        userName:
+          type: string
+        avatarUrl:
+          type: string
+        totalPoints:
+          type: integer
+        quizzesCompleted:
+          type: integer
+        streak:
+          type: integer
+      required:
+        - rank
+        - userId
+        - userName
+        - totalPoints
+        - quizzesCompleted
+        - streak
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: integer
+        nameBn:
+          type: string
+        nameEn:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        avatarUrl:
+          type: string
+        classLevel:
+          type: string
+        goal:
+          type: string
+        totalPoints:
+          type: integer
+        badges:
+          type: array
+          items:
+            type: string
+        joinedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - nameBn
+        - nameEn
+        - totalPoints
+        - badges
+
+    UpdateUserProfileBody:
+      type: object
+      properties:
+        nameBn:
+          type: string
+        nameEn:
+          type: string
+        classLevel:
+          type: string
+        goal:
+          type: string
+        avatarUrl:
+          type: string
+
+    Enrollment:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        courseId:
+          type: integer
+        enrolledAt:
+          type: string
+          format: date-time
+        progressPercent:
+          type: integer
+        completedLessons:
+          type: integer
+        course:
+          $ref: "#/components/schemas/Course"
+      required:
+        - id
+        - userId
+        - courseId
+        - enrolledAt
+        - progressPercent
+        - completedLessons
+
+    EnrollCourseBody:
+      type: object
+      properties:
+        courseId:
+          type: integer
+        paymentId:
+          type: integer
+      required:
+        - courseId
+
+    LessonProgress:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        lessonId:
+          type: integer
+        courseId:
+          type: integer
+        completed:
+          type: boolean
+        watchedSeconds:
+          type: integer
+        completedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - userId
+        - lessonId
+        - courseId
+        - completed
+
+    UpdateProgressBody:
+      type: object
+      properties:
+        lessonId:
+          type: integer
+        courseId:
+          type: integer
+        completed:
+          type: boolean
+        watchedSeconds:
+          type: integer
+      required:
+        - lessonId
+        - courseId
+        - completed
+
+    LiveClass:
+      type: object
+      properties:
+        id:
+          type: integer
+        titleBn:
+          type: string
+        titleEn:
+          type: string
+        instructor:
+          type: string
+        instructorAvatar:
+          type: string
+        subject:
+          type: string
+        scheduledAt:
+          type: string
+          format: date-time
+        durationMinutes:
+          type: integer
+        joinUrl:
+          type: string
+        isLive:
+          type: boolean
+        enrolledCount:
+          type: integer
+        courseId:
+          type: integer
+      required:
+        - id
+        - titleBn
+        - titleEn
+        - instructor
+        - subject
+        - scheduledAt
+        - durationMinutes
+        - isLive
+        - enrolledCount
+
+    Payment:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        courseId:
+          type: integer
+        amount:
+          type: number
+        method:
+          type: string
+          enum: [bkash, nagad, manual]
+        status:
+          type: string
+          enum: [pending, completed, failed]
+        transactionId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        course:
+          $ref: "#/components/schemas/Course"
+      required:
+        - id
+        - userId
+        - courseId
+        - amount
+        - method
+        - status
+        - createdAt
+
+    CreatePaymentBody:
+      type: object
+      properties:
+        courseId:
+          type: integer
+        amount:
+          type: number
+        method:
+          type: string
+          enum: [bkash, nagad, manual]
+        transactionId:
+          type: string
+        couponCode:
+          type: string
+      required:
+        - courseId
+        - amount
+        - method
+
+    DashboardSummary:
+      type: object
+      properties:
+        enrolledCourses:
+          type: integer
+        completedCourses:
+          type: integer
+        totalLessonsCompleted:
+          type: integer
+        totalQuizzesTaken:
+          type: integer
+        averageQuizScore:
+          type: number
+        currentStreak:
+          type: integer
+        totalPoints:
+          type: integer
+        upcomingLiveClasses:
+          type: integer
+        recentActivity:
+          type: array
+          items:
+            $ref: "#/components/schemas/ActivityItem"
+      required:
+        - enrolledCourses
+        - completedCourses
+        - totalLessonsCompleted
+        - totalQuizzesTaken
+        - currentStreak
+        - totalPoints
+
+    ActivityItem:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [lesson_completed, quiz_taken, course_enrolled, live_attended]
+        titleBn:
+          type: string
+        titleEn:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        points:
+          type: integer
+      required:
+        - type
+        - titleBn
+        - titleEn
+        - timestamp
+
+    StreakData:
+      type: object
+      properties:
+        currentStreak:
+          type: integer
+        longestStreak:
+          type: integer
+        studiedToday:
+          type: boolean
+        weeklyActivity:
+          type: array
+          items:
+            type: boolean
+      required:
+        - currentStreak
+        - longestStreak
+        - studiedToday
+        - weeklyActivity
+
+    Category:
+      type: object
+      properties:
+        id:
+          type: string
+        nameBn:
+          type: string
+        nameEn:
+          type: string
+        icon:
+          type: string
+        courseCount:
+          type: integer
+      required:
+        - id
+        - nameBn
+        - nameEn
+        - courseCount

@@ -1,0 +1,19 @@
+import { ReactNode } from "react";
+import { BottomNav } from "./bottom-nav";
+import { Sidebar } from "./sidebar";
+
+interface LayoutProps {
+  children: ReactNode;
+}
+
+export function Layout({ children }: LayoutProps) {
+  return (
+    <div className="min-h-[100dvh] bg-background">
+      <Sidebar />
+      <main className="md:ml-64 pb-20 md:pb-0 min-h-[100dvh]">
+        {children}
+      </main>
+      <BottomNav />
+    </div>
+  );
+}
