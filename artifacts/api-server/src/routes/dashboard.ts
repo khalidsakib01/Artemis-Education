@@ -8,53 +8,24 @@ import {
   usersTable,
 } from "@workspace/db";
 import { eq, gte, and } from "drizzle-orm";
+import { requireAuth } from "../middlewares/requireAuth";
 
 const router = Router();
 
-const DEFAULT_USER_ID = 1;
+router.get("/dashboard/summary", requireAuth, async (req, res) => {
+  const userId = (req as any).dbUserId;
 
-router.get("/dashboard/summary", async (req, res) => {
-  const enrollments = await db
-    .select()
-    .from(enrollmentsTable)
-    .where(eq(enrollmentsTable.userId, DEFAULT_USER_ID));
-
-  const progress = await db
-    .select()
-    .from(lessonProgressTable)
-    .where(
-      and(
-        eq(lessonProgressTable.userId, DEFAULT_USER_ID),
-        eq(lessonProgressTable.completed, true)
-      )
-    );
-
-  const quizResults = await db
-    .select()
-    .from(quizResultsTable)
-    .where(eq(quizResultsTable.userId, DEFAULT_USER_ID));
-
+  const enrollments = await db.select().from(enrollmentsTable).where(eq(enrollmentsTable.userId, userId));
+  const progress = await db.select().from(lessonProgressTable).where(and(eq(lessonProgressTable.userId, userId), eq(lessonProgressTable.completed, true)));
+  const quizResults = await db.select().from(quizResultsTable).where(eq(quizResultsTable.userId, userId));
   const now = new Date();
-  const upcomingLive = await db
-    .select()
-    .from(liveClassesTable)
-    .where(gte(liveClassesTable.scheduledAt, now));
+  const upcomingLive = await db.select().from(liveClassesTable).where(gte(liveClassesTable.scheduledAt, now));
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
 
-  const [user] = await db
-    .select()
-    .from(usersTable)
-    .where(eq(usersTable.id, DEFAULT_USER_ID));
-
-  const avgScore =
-    quizResults.length > 0
-      ? Math.round(
-          quizResults.reduce((a, b) => a + b.score, 0) / quizResults.length
-        )
-      : 0;
-
-  const completedCourses = enrollments.filter(
-    (e) => e.progressPercent === 100
-  ).length;
+  const avgScore = quizResults.length > 0
+    ? Math.round(quizResults.reduce((a, b) => a + b.score, 0) / quizResults.length)
+    : 0;
+  const completedCourses = enrollments.filter((e) => e.progressPercent === 100).length;
 
   const recentActivity = [
     ...progress.slice(-3).map((p) => ({
@@ -71,9 +42,7 @@ router.get("/dashboard/summary", async (req, res) => {
       timestamp: q.submittedAt.toISOString(),
       points: q.score,
     })),
-  ].sort(
-    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-  );
+  ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
   res.json({
     enrolledCourses: enrollments.length,
@@ -81,28 +50,26 @@ router.get("/dashboard/summary", async (req, res) => {
     totalLessonsCompleted: progress.length,
     totalQuizzesTaken: quizResults.length,
     averageQuizScore: avgScore,
-    currentStreak: user?.totalPoints ? Math.min(7, Math.floor(user.totalPoints / 100)) : 3,
+    currentStreak: user?.totalPoints ? Math.min(7, Math.floor(user.totalPoints / 100)) : 0,
     totalPoints: user?.totalPoints ?? 0,
     upcomingLiveClasses: upcomingLive.length,
     recentActivity,
   });
 });
 
-router.get("/dashboard/streak", async (req, res) => {
-  const [user] = await db
-    .select()
-    .from(usersTable)
-    .where(eq(usersTable.id, DEFAULT_USER_ID));
+router.get("/dashboard/streak", requireAuth, async (req, res) => {
+  const userId = (req as any).dbUserId;
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
 
   const currentStreak = user?.totalPoints
     ? Math.min(14, Math.floor(user.totalPoints / 80))
-    : 5;
+    : 0;
 
   res.json({
     currentStreak,
-    longestStreak: currentStreak + 3,
-    studiedToday: true,
-    weeklyActivity: [true, true, false, true, true, true, true],
+    longestStreak: currentStreak + 2,
+    studiedToday: currentStreak > 0,
+    weeklyActivity: [true, true, false, true, true, true, true].map((_, i) => i < currentStreak % 7),
   });
 });
 

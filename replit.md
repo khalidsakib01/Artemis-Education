@@ -20,10 +20,12 @@ A complete, production-ready, mobile-first EdTech platform for Bangladesh named 
 - **Frontend**: React + Vite + Tailwind CSS + Framer Motion
 - **Backend**: Express 5
 - **Database**: PostgreSQL + Drizzle ORM
+- **Authentication**: Clerk (appId: app_3C41SzEu5wfSkrlRja88AedHjOz) — env vars auto-set (CLERK_SECRET_KEY, CLERK_PUBLISHABLE_KEY, VITE_CLERK_PUBLISHABLE_KEY)
 - **Validation**: Zod (`zod/v4`), `drizzle-zod`
 - **API codegen**: Orval (from OpenAPI spec)
 - **Build**: esbuild (CJS bundle)
 - **Routing**: Wouter
+- **Language Toggle**: Bangla/English via `LanguageContext` + `useLang()` hook (localStorage: "artemis-lang")
 
 ## Key Features
 
