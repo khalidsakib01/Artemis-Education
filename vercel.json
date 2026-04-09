@@ -2,8 +2,8 @@
   "version": 2,
   "framework": null,
   "installCommand": "pnpm install --frozen-lockfile",
-  "buildCommand": "pnpm --filter @workspace/artemis-education build",
-  "outputDirectory": "artifacts/artemis-education/public",
+  "buildCommand": "pnpm --filter @workspace/artemis-education build && node ./copy-root-public.mjs",
+  "outputDirectory": "public",
   "rewrites": [
     {
       "source": "/((?!api(?:/|$)).*)",
